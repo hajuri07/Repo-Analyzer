@@ -1,15 +1,29 @@
 # main.py
-from fastapi import FastAPI, Depends,APIRouter
+from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from .database  import get_db,Base, engine
 from app import models
 from  .import schemas
 from app import crud as user_crud
-from pydantic import EmailStr
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from . import security
 from fastapi import  HTTPException
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 3. Initialize database tables
 
 Base.metadata.create_all(bind=engine)
 
@@ -47,3 +61,21 @@ def get_sub(submission_id:int ,db:Session = Depends(get_db),current_user: models
     if not result:
         raise HTTPException(status_code=404,detail = "Submission not found or not yours")
     return result
+@app.get(
+    "/submission/{submission_id}/review",
+    response_model=schemas.ReviewResponse
+)
+def get_review(
+    submission_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(security.get_current_user)
+):
+    return user_crud.get_review(
+        submission_id=submission_id,
+        current_user=current_user,
+        db=db
+    )
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
