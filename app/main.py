@@ -16,7 +16,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "http://localhost:5174"
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -48,10 +50,9 @@ def user_login(user:schemas.UserLogin , db:Session = Depends(get_db)):
 
 
 
-@app.post("/submission", response_model=schemas.ReviewResponse)
-
-def user_submission(sub:schemas.Submission_schema , db:Session = Depends(get_db),  current_user: models.User = Depends(security.get_current_user)):
-    return user_crud.create_submission(submission=sub,current_user=current_user,db=db)
+@app.post("/submission", response_model=schemas.SubmissionResponse, status_code=201)
+def user_submission(sub: schemas.Submission_schema, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+    return user_crud.create_submission(submission=sub, current_user=current_user, db=db)
 
 
 @app.get("/submission/{submission_id}",response_model = schemas.SubmissionResponse)

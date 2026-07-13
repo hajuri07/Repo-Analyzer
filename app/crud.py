@@ -53,32 +53,53 @@ def user_login(user:schemas.UserLogin,db:Session):
         access_token=token_string,
         token_type="bearer"
         )
-def create_submission(submission:schemas.Submission,db:Session,current_user: models.User)->models.Submission :
+def create_submission(submission: schemas.Submission_schema, db: Session, current_user: models.User) -> models.Submission:
     new_submission = models.Submission(
-         user_id=current_user.id,
-         code=submission.code,
-         language=submission.language)
+        user_id=current_user.id,
+        code=submission.code,
+        language=submission.language,
+    )
+    db.add(new_submission)
+    db.commit()
+    db.refresh(new_submission)
+
     review = service.review_code(
         new_submission.code,
-        new_submission.language
-)
+        new_submission.language,
+    )
     new_review = models.Review(
         submission_id=new_submission.id,
         summary=review["summary"],
-        issues=review["issues"],
-        suggestions=review["suggestions"],
-        overall_score=review["overall_score"]
-)
+        issues=review.get("issues", []),
+        suggestions=review.get("suggestions", []),
+        overall_score=float(review.get("overall_score", 0)),
+    )
 
     db.add(new_review)
     db.commit()
     db.refresh(new_review)
-    return new_review
-     
+    return new_submission
+
+
 def get_submission(db: Session, submission_id: int, current_user: models.User) -> models.Submission | None:
-  
     return db.query(models.Submission).filter(
         models.Submission.id == submission_id,
-        models.Submission.user_id == current_user.id
+        models.Submission.user_id == current_user.id,
     ).first()
+
+
+def get_review(db: Session, submission_id: int, current_user: models.User) -> models.Review:
+    submission = db.query(models.Submission).filter(
+        models.Submission.id == submission_id,
+        models.Submission.user_id == current_user.id,
+    ).first()
+
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found or not yours")
+
+    review = db.query(models.Review).filter(models.Review.submission_id == submission_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    return review
      
