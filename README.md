@@ -1,4 +1,4 @@
-# 🤖 RepoAnalyzer
+# RepoAnalyzer
 
 An AI-powered GitHub Repository Analysis API built with **FastAPI**, **PostgreSQL**, and **Groq LLMs**.
 
