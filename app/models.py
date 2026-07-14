@@ -22,9 +22,9 @@ class Submission(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    code = Column(Text, nullable=False)
-
-    language = Column(String, nullable=False)
+   
+    repo_url = Column(String, nullable=False) 
+   
     submitted_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="submissions")

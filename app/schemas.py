@@ -1,6 +1,8 @@
 from pydantic import BaseModel,Field,EmailStr
 from datetime import datetime
 from typing import List
+from pydantic import HttpUrl
+
 
 class UserCreate(BaseModel):
     username: str = Field(...,min_length= 3,max_length= 12)
@@ -19,15 +21,13 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
-class Submission_schema(BaseModel):
-    code : str 
-    language : str 
+class SubmissionCreate(BaseModel):
+    repo_url :str
 
 class SubmissionResponse(BaseModel):
     id: int
     user_id: int
-    code: str
-    language: str
+    repo_url: HttpUrl
     submitted_at: datetime
 
     class Config:

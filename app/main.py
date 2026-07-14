@@ -25,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 3. Initialize database tables
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -50,8 +50,8 @@ def user_login(user:schemas.UserLogin , db:Session = Depends(get_db)):
 
 
 
-@app.post("/submission", response_model=schemas.SubmissionResponse, status_code=201)
-def user_submission(sub: schemas.Submission_schema, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
+@app.post("/submission/analyze", response_model=schemas.SubmissionResponse, status_code=201)
+def user_submission(sub: schemas.SubmissionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     return user_crud.create_submission(submission=sub, current_user=current_user, db=db)
 
 
@@ -62,10 +62,7 @@ def get_sub(submission_id:int ,db:Session = Depends(get_db),current_user: models
     if not result:
         raise HTTPException(status_code=404,detail = "Submission not found or not yours")
     return result
-@app.get(
-    "/submission/{submission_id}/review",
-    response_model=schemas.ReviewResponse
-)
+@app.get("/submission/{submission_id}/review",response_model=schemas.ReviewResponse)
 def get_review(
     submission_id: int,
     db: Session = Depends(get_db),
@@ -76,7 +73,4 @@ def get_review(
         current_user=current_user,
         db=db
     )
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
