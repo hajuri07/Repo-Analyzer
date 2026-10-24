@@ -169,6 +169,6 @@ Open `http://localhost:8000` in a browser, sign‑up, and start analyzing reposi
 
 ## ✍️ Author
 
-**Ibrahim Hajuri** – Backend Developer | Applied AI Engineer
+**Ibrahim Hajuri** –AI Engineer
 
 Feel free to open issues or PRs – the project is designed to be a learning playground for AI‑assisted code analysis.
