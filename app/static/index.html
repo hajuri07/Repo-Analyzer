@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReviewForge AI · Code Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-root: #09090b;
+      --bg-sidebar: #121215;
+      --bg-card: #18181b;
+      --bg-card-hover: #202024;
+      --bg-input: #0d0d10;
+      --border-color: #27272a;
+      --border-subtle: #3f3f46;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-silver: #e4e4e7;
+      --accent-blue: #3b82f6;
+      --accent-green: #22c55e;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-root);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* Auth Screen */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 440px;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #27272a, #09090b);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--text-primary);
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--text-primary);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--border-subtle);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--text-primary);
+      color: var(--bg-root);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: wait; }
+
+    .auth-msg {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--accent-red);
+      text-align: center;
+    }
+
+    /* Main App Layout (ChatGPT / Antigravity style) */
+    .app-layout {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-text {
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .version-tag {
+      font-size: 10px;
+      background: #27272a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+
+    .btn-new-review {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-new-review:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .history-section {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .history-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 8px 4px;
+    }
+
+    .history-item {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item:hover, .history-item.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    .history-score {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #27272a;
+    }
+
+    .user-footer {
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #27272a;
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-logout {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px;
+    }
+
+    .btn-logout:hover { color: var(--accent-red); }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--bg-root);
+    }
+
+    .top-bar {
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(18, 18, 21, 0.5);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .top-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .repo-pill {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .example-chips {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip-btn:hover {
+      border-color: var(--border-subtle);
+      color: var(--text-primary);
+    }
+
+    .content-body {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Input Section */
+    .hero-box {
+      text-align: center;
+      margin: 20px 0 10px;
+    }
+
+    .hero-box h1 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      margin-bottom: 8px;
+    }
+
+    .hero-box p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .input-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .input-card input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 15px;
+      outline: none;
+      padding: 8px 12px;
+    }
+
+    .btn-analyze {
+      background: var(--text-primary);
+      color: var(--bg-root);
+      border: none;
+      padding: 10px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-analyze:disabled {
+      opacity: 0.4;
+      cursor: wait;
+    }
+
+    /* Streaming & Execution Canvas */
+    .stream-box {
+      display: none;
+      background: #0d0d10;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .stream-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+
+    .stream-stages {
+      display: flex;
+      gap: 12px;
+    }
+
+    .stage-badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #18181b;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stage-badge.active {
+      color: var(--text-primary);
+      border-color: var(--border-subtle);
+      background: #27272a;
+    }
+
+    .stage-badge.done {
+      color: var(--accent-green);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .spinner-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .terminal-window {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #d4d4d8;
+      max-height: 320px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #09090b;
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #18181b;
+    }
+
+    .typing-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background: var(--text-primary);
+      vertical-align: text-bottom;
+      animation: blink 0.8s infinite;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* Dashboard Section */
+    .dashboard-view {
+      display: none;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .score-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .score-circle {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #27272a 0%, #18181b 100%);
+      border: 3px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      flex-shrink: 0;
+    }
+
+    .score-val {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .score-max {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .summary-text h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .summary-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .section-head {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .metric-name {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .metric-score {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: #27272a;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    .metric-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Issues & Filter */
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      background: #27272a;
+      color: var(--text-primary);
+    }
+
+    .issues-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .issue-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .issue-card:hover {
+      border-color: var(--border-subtle);
+      background: var(--bg-card-hover);
+    }
+
+    .issue-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .severity-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .severity-critical { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .severity-high { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .severity-medium { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .severity-low { background: rgba(161, 161, 170, 0.15); color: #d4d4d8; border: 1px solid rgba(161, 161, 170, 0.3); }
+
+    .issue-area {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .issue-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .issue-detail {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .issue-file {
+      margin-top: 10px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-drawer {
+      display: none;
+      margin-top: 12px;
+      background: #09090b;
+      border: 1px solid #27272a;
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #a1a1aa;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    .issue-card.open .code-drawer {
+      display: block;
+    }
+
+    /* Roadmap & Suggestions Grid */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 850px) {
+      .two-col-grid { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .content-body { padding: 20px; }
+    }
+
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .simple-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .simple-card-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .badge-pill {
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #27272a;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .simple-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .simple-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Overlay Modal -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-icon">RF</div>
+        <div>
+          <h2 style="font-size:18px; font-weight:700;">ReviewForge AI</h2>
+          <p style="font-size:12px; color:var(--text-muted);">Antigravity Code Intelligence</p>
+        </div>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchAuth('login')">Sign In</button>
+        <button class="auth-tab" id="tabSignup" onclick="switchAuth('signup')">Create Account</button>
+      </div>
+
+      <form id="authForm">
+        <div class="form-group" id="groupUsername" style="display:none;">
+          <label for="inputUsername">Username</label>
+          <input type="text" id="inputUsername" class="input-field" placeholder="dev_architect">
+        </div>
+        <div class="form-group">
+          <label for="inputEmail">Email Address</label>
+          <input type="email" id="inputEmail" class="input-field" placeholder="developer@company.com" required>
+        </div>
+        <div class="form-group">
+          <label for="inputPassword">Password</label>
+          <input type="password" id="inputPassword" class="input-field" placeholder="••••••••" minlength="8" required>
+        </div>
+        <button type="submit" class="btn-primary" id="btnAuth">Enter ReviewForge</button>
+      </form>
+
+      <div class="auth-msg" id="authError"></div>
+    </div>
+  </div>
+
+  <!-- Main App Layout -->
+  <div class="app-layout">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-text">
+          <span>ReviewForge</span>
+          <span class="version-tag">AI 2.0</span>
+        </div>
+      </div>
+
+      <button class="btn-new-review" onclick="resetToNewReview()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        New Repository Audit
+      </button>
+
+      <div class="history-section">
+        <div class="history-title">Recent Audits</div>
+        <div id="historyList"></div>
+      </div>
+
+      <div class="user-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="avatarLetter">U</div>
+          <div class="user-details">
+            <span class="user-name" id="displayUsername">Developer</span>
+            <span class="user-email" id="displayEmail">user@local</span>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Sign Out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Workspace -->
+    <main class="main-content">
+      
+      <div class="top-bar">
+        <div class="top-title">
+          <span>Repository Inspector</span>
+          <span class="repo-pill" id="activeRepoPill">Public Repositories</span>
+        </div>
+        <div class="example-chips">
+          <button class="chip-btn" onclick="fillExample('https://github.com/fastapi/fastapi')">fastapi/fastapi</button>
+          <button class="chip-btn" onclick="fillExample('https://github.com/pallets/flask')">pallets/flask</button>
+          <button class="chip-btn" onclick="fillExample('https://github.com/expressjs/express')">expressjs/express</button>
+        </div>
+      </div>
+
+      <div class="content-body">
+        
+        <!-- Hero & Input Box -->
+        <div class="hero-box">
+          <h1>Judge-Ready AI Code Review</h1>
+          <p>Scan public GitHub codebases to identify security risks, architectural flaws, and actionable roadmaps.</p>
+        </div>
+
+        <div class="input-card">
+          <input type="url" id="repoInput" placeholder="https://github.com/owner/repository" required>
+          <button class="btn-analyze" id="btnStartAnalyze" onclick="startAnalysis()">Analyze Codebase</button>
+        </div>
+
+        <!-- Real-Time Token Streaming Output Canvas -->
+        <div class="stream-box" id="streamCanvas">
+          <div class="stream-header">
+            <div class="stream-stages">
+              <span class="stage-badge" id="badgeQueued"><span class="spinner-dot"></span> 01 Queued</span>
+              <span class="stage-badge" id="badgeCloning">02 Cloning</span>
+              <span class="stage-badge" id="badgeIndexing">03 Mapping</span>
+              <span class="stage-badge" id="badgeAI">04 AI Reviewing</span>
+            </div>
+            <span style="font-size:12px; color:var(--text-muted);" id="timerText">0s elapsed</span>
+          </div>
+
+          <div class="terminal-window" id="terminalOutput">Initializing secure sandbox environment...<span class="typing-cursor"></span></div>
+        </div>
+
+        <!-- Structured Review Dashboard -->
+        <div class="dashboard-view" id="dashboardView">
+          
+          <!-- Health Score Banner -->
+          <div class="score-banner">
+            <div class="score-circle">
+              <span class="score-val" id="overallScoreVal">8.5</span>
+              <span class="score-max">OUT OF 10</span>
+            </div>
+            <div class="summary-text">
+              <h2>Repository Health Summary <span class="badge-pill" id="healthBadge">Excellent</span></h2>
+              <p class="summary-desc" id="summaryText">Scanning completed.</p>
+            </div>
+          </div>
+
+          <!-- 5 Health Metrics -->
+          <div>
+            <div class="section-head" style="margin-bottom:12px;">Engineering Health Scorecard</div>
+            <div class="metrics-grid" id="metricsGrid"></div>
+          </div>
+
+          <!-- Priority Issues & Vulnerabilities -->
+          <div>
+            <div class="section-head" style="margin-bottom:14px;">
+              <span>Priority Code Findings</span>
+              <div class="filter-tabs">
+                <button class="filter-btn active" onclick="filterIssues('all', this)">All</button>
+                <button class="filter-btn" onclick="filterIssues('critical', this)">Critical</button>
+                <button class="filter-btn" onclick="filterIssues('high', this)">High</button>
+                <button class="filter-btn" onclick="filterIssues('medium', this)">Medium</button>
+                <button class="filter-btn" onclick="filterIssues('low', this)">Low</button>
+              </div>
+            </div>
+
+            <div class="issues-grid" id="issuesList"></div>
+          </div>
+
+          <!-- Roadmap & Suggestions -->
+          <div class="two-col-grid">
+            <div>
+              <div class="section-head" style="margin-bottom:12px;">Implementation Roadmap</div>
+              <div class="card-list" id="roadmapList"></div>
+            </div>
+            <div>
+              <div class="section-head" style="margin-bottom:12px;">Actionable Recommendations</div>
+              <div class="card-list" id="suggestionsList"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    let authToken = localStorage.getItem('rf_token') || '';
+    let currentAuthMode = 'login';
+    let timerInterval = null;
+    let currentReviewData = null;
+
+    const authOverlay = document.getElementById('authOverlay');
+    const authForm = document.getElementById('authForm');
+    const authError = document.getElementById('authError');
+    const tabLogin = document.getElementById('tabLogin');
+    const tabSignup = document.getElementById('tabSignup');
+    const groupUsername = document.getElementById('groupUsername');
+    const btnAuth = document.getElementById('btnAuth');
+    const repoInput = document.getElementById('repoInput');
+    const btnStartAnalyze = document.getElementById('btnStartAnalyze');
+    const streamCanvas = document.getElementById('streamCanvas');
+    const terminalOutput = document.getElementById('terminalOutput');
+    const dashboardView = document.getElementById('dashboardView');
+    const historyList = document.getElementById('historyList');
+
+    const badgeQueued = document.getElementById('badgeQueued');
+    const badgeCloning = document.getElementById('badgeCloning');
+    const badgeIndexing = document.getElementById('badgeIndexing');
+    const badgeAI = document.getElementById('badgeAI');
+
+    function esc(str) {
+      if (str === null || str === undefined) return '';
+      let div = document.createElement('div');
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+
+    function switchAuth(mode) {
+      currentAuthMode = mode;
+      authError.textContent = '';
+      tabLogin.classList.toggle('active', mode === 'login');
+      tabSignup.classList.toggle('active', mode === 'signup');
+      groupUsername.style.display = mode === 'signup' ? 'block' : 'none';
+      btnAuth.textContent = mode === 'signup' ? 'Create Account' : 'Enter ReviewForge';
+    }
+
+    authForm.onsubmit = async (e) => {
+      e.preventDefault();
+      authError.textContent = '';
+      btnAuth.disabled = true;
+      btnAuth.textContent = 'Authenticating...';
+
+      let body = {
+        email: document.getElementById('inputEmail').value,
+        password: document.getElementById('inputPassword').value,
+      };
+      if (currentAuthMode === 'signup') {
+        body.username = document.getElementById('inputUsername').value;
+      }
+
+      try {
+        let endpoint = currentAuthMode === 'signup' ? '/auth/signup' : '/auth/login';
+        let res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        let data = await res.json();
+        if (!res.ok) {
+          authError.textContent = data.detail || 'Authentication failed.';
+          return;
+        }
+        if (currentAuthMode === 'signup') {
+          switchAuth('login');
+          authError.style.color = 'var(--accent-green)';
+          authError.textContent = 'Account created successfully! Please sign in.';
+          return;
+        }
+        authToken = data.access_token;
+        localStorage.setItem('rf_token', authToken);
+        initApp();
+      } catch (err) {
+        authError.textContent = 'Server connection error.';
+      } finally {
+        btnAuth.disabled = false;
+        btnAuth.textContent = currentAuthMode === 'signup' ? 'Create Account' : 'Enter ReviewForge';
+      }
+    };
+
+    function logout() {
+      localStorage.removeItem('rf_token');
+      authToken = '';
+      authOverlay.style.display = 'flex';
+    }
+
+    function fillExample(url) {
+      repoInput.value = url;
+    }
+
+    function resetToNewReview() {
+      dashboardView.style.display = 'none';
+      streamCanvas.style.display = 'none';
+      repoInput.value = '';
+      repoInput.focus();
+    }
+
+    async function initApp() {
+      if (!authToken) {
+        authOverlay.style.display = 'flex';
+        return;
+      }
+      authOverlay.style.display = 'none';
+      loadHistory();
+    }
+
+    async function loadHistory() {
+      try {
+        let res = await fetch('/submissions', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (!res.ok) return;
+        let list = await res.json();
+        renderHistory(list);
+      } catch (e) {}
+    }
+
+    function renderHistory(items) {
+      if (!items || items.length === 0) {
+        historyList.innerHTML = `<div style="font-size:12px; color:var(--text-muted); padding:8px;">No prior reviews.</div>`;
+        return;
+      }
+      historyList.innerHTML = items.map(item => {
+        let repoName = item.repo_url.replace('https://github.com/', '').replace(/\/$/, '');
+        return `
+          <div class="history-item" onclick="loadPastReview(${item.id}, '${esc(repoName)}')">
+            <span>📦 ${esc(repoName)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadPastReview(submissionId, repoName) {
+      try {
+        document.getElementById('activeRepoPill').textContent = repoName;
+        streamCanvas.style.display = 'none';
+        dashboardView.style.display = 'none';
+
+        let res = await fetch(`/submission/${submissionId}/review`, {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (!res.ok) return;
+        let review = await res.json();
+        renderDashboard(review);
+      } catch (e) {}
+    }
+
+    function updateStageBadges(stage) {
+      const reset = (el) => el.className = 'stage-badge';
+      reset(badgeQueued); reset(badgeCloning); reset(badgeIndexing); reset(badgeAI);
+
+      if (stage === 'accepted') {
+        badgeQueued.className = 'stage-badge active';
+      } else if (stage === 'cloning') {
+        badgeQueued.className = 'stage-badge done';
+        badgeCloning.className = 'stage-badge active';
+      } else if (stage === 'indexing') {
+        badgeQueued.className = 'stage-badge done';
+        badgeCloning.className = 'stage-badge done';
+        badgeIndexing.className = 'stage-badge active';
+      } else if (stage === 'reviewing' || stage === 'generating') {
+        badgeQueued.className = 'stage-badge done';
+        badgeCloning.className = 'stage-badge done';
+        badgeIndexing.className = 'stage-badge done';
+        badgeAI.className = 'stage-badge active';
+      } else if (stage === 'complete') {
+        badgeQueued.className = 'stage-badge done';
+        badgeCloning.className = 'stage-badge done';
+        badgeIndexing.className = 'stage-badge done';
+        badgeAI.className = 'stage-badge done';
+      }
+    }
+
+    async function startAnalysis() {
+      let url = repoInput.value.trim();
+      if (!url) return;
+
+      dashboardView.style.display = 'none';
+      streamCanvas.style.display = 'block';
+      btnStartAnalyze.disabled = true;
+      btnStartAnalyze.textContent = 'Analyzing...';
+      terminalOutput.innerHTML = 'Initializing secure sandbox environment...\n<span class="typing-cursor"></span>';
+      
+      let repoName = url.replace('https://github.com/', '').replace(/\/$/, '');
+      document.getElementById('activeRepoPill').textContent = repoName;
+
+      let startTime = Date.now();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        let sec = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById('timerText').textContent = sec + 's elapsed';
+      }, 1000);
+
+      updateStageBadges('accepted');
+
+      try {
+        let response = await fetch('/submission/analyze/stream', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + authToken
+          },
+          body: JSON.stringify({ repo_url: url })
+        });
+
+        if (!response.ok) {
+          let errData = await response.json();
+          terminalOutput.textContent = 'Error starting analysis: ' + (errData.detail || 'Server error');
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let streamedText = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split('\n\n');
+          buffer = events.pop();
+
+          for (const rawEvent of events) {
+            const dataLine = rawEvent.split('\n').find(l => l.startsWith('data: '));
+            if (!dataLine) continue;
+
+            const payload = JSON.parse(dataLine.slice(6));
+            updateStageBadges(payload.stage);
+
+            if (payload.stage === 'cloning' || payload.stage === 'indexing' || payload.stage === 'reviewing') {
+              streamedText += `\n[STATUS] ${payload.message}\n`;
+              terminalOutput.innerHTML = esc(streamedText) + '<span class="typing-cursor"></span>';
+              terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            } else if (payload.stage === 'generating' && payload.delta) {
+              streamedText += payload.delta;
+              terminalOutput.innerHTML = esc(streamedText) + '<span class="typing-cursor"></span>';
+              terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            } else if (payload.stage === 'complete') {
+              clearInterval(timerInterval);
+              renderDashboard(payload.review);
+              loadHistory();
+            } else if (payload.stage === 'error') {
+              clearInterval(timerInterval);
+              streamedText += `\n[ERROR] ${payload.message}\n`;
+              terminalOutput.innerHTML = esc(streamedText);
+            }
+          }
+        }
+      } catch (err) {
+        clearInterval(timerInterval);
+        terminalOutput.textContent = 'Connection interrupted or failed.';
+      } finally {
+        btnStartAnalyze.disabled = false;
+        btnStartAnalyze.textContent = 'Analyze Codebase';
+      }
+    }
+
+    function renderDashboard(review) {
+      currentReviewData = review;
+      streamCanvas.style.display = 'none';
+
+      let score = review.overall_score || 0;
+      document.getElementById('overallScoreVal').textContent = score.toFixed(1);
+      
+      let badge = document.getElementById('healthBadge');
+      if (score >= 8.0) { badge.textContent = 'Excellent'; badge.style.background = 'rgba(34, 197, 94, 0.2)'; badge.style.color = '#4ade80'; }
+      else if (score >= 6.0) { badge.textContent = 'Good'; badge.style.background = 'rgba(59, 130, 246, 0.2)'; badge.style.color = '#60a5fa'; }
+      else if (score >= 4.0) { badge.textContent = 'Needs Work'; badge.style.background = 'rgba(245, 158, 11, 0.2)'; badge.style.color = '#fbbf24'; }
+      else { badge.textContent = 'Critical Risk'; badge.style.background = 'rgba(239, 68, 68, 0.2)'; badge.style.color = '#f87171'; }
+
+      document.getElementById('summaryText').textContent = review.summary;
+
+      let metricsGrid = document.getElementById('metricsGrid');
+      metricsGrid.innerHTML = (review.metrics || []).map(m => `
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-name">${esc(m.name)}</span>
+            <span class="metric-score">${m.score.toFixed(1)}</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width:${m.score * 10}%"></div>
+          </div>
+          <div class="metric-desc">${esc(m.rationale)}</div>
+        </div>
+      `).join('');
+
+      renderIssues(review.issues || []);
+
+      let roadmapList = document.getElementById('roadmapList');
+      roadmapList.innerHTML = (review.roadmap || []).map(r => `
+        <div class="simple-card">
+          <div class="simple-card-top">
+            <span class="badge-pill" style="text-transform:uppercase;">${esc(r.priority)}</span>
+            <span style="color:var(--text-muted);">${esc(r.effort)}</span>
+          </div>
+          <h4>${esc(r.title)}</h4>
+          <p>${esc(r.detail)}</p>
+        </div>
+      `).join('');
+
+      let suggestionsList = document.getElementById('suggestionsList');
+      suggestionsList.innerHTML = (review.suggestions || []).map(s => `
+        <div class="simple-card">
+          <div class="simple-card-top">
+            <span class="badge-pill" style="color:var(--accent-blue);">${esc(s.impact)} impact</span>
+          </div>
+          <h4>${esc(s.title)}</h4>
+          <p>${esc(s.detail)}</p>
+        </div>
+      `).join('');
+
+      dashboardView.style.display = 'flex';
+    }
+
+    function renderIssues(issues) {
+      let issuesList = document.getElementById('issuesList');
+      if (!issues || issues.length === 0) {
+        issuesList.innerHTML = `<div class="simple-card" style="color:var(--text-muted);">No significant issues identified.</div>`;
+        return;
+      }
+      issuesList.innerHTML = issues.map(iss => `
+        <div class="issue-card" onclick="this.classList.toggle('open')">
+          <div class="issue-meta">
+            <span class="severity-badge severity-${esc(iss.severity)}">${esc(iss.severity)}</span>
+            <span class="issue-area">${esc(iss.area)}</span>
+          </div>
+          <div class="issue-title">${esc(iss.title)}</div>
+          <div class="issue-detail">${esc(iss.detail)}</div>
+          ${iss.file ? `<div class="issue-file">📄 ${esc(iss.file)}${iss.line_hint ? ` : line ${iss.line_hint}` : ''} (click to expand snippet)</div>` : ''}
+          ${iss.excerpt ? `<div class="code-drawer">${esc(iss.excerpt)}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function filterIssues(severity, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (!currentReviewData || !currentReviewData.issues) return;
+      if (severity === 'all') {
+        renderIssues(currentReviewData.issues);
+      } else {
+        let filtered = currentReviewData.issues.filter(i => i.severity.toLowerCase() === severity);
+        renderIssues(filtered);
+      }
+    }
+
+    if (authToken) {
+      initApp();
+    } else {
+      authOverlay.style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
